@@ -4,6 +4,11 @@ package com.example.mynative;
 import java.io.*;
 import java.net.Socket;
 
+/**
+ * @author gengwenguan
+ * @createDate 2024/10/25
+ * @description TCP客户端连接要服务器接收服务器下发的h264数据
+ */
 public class TcpClient {
     public interface Listener{
         void OnRecvH264FromServer(byte[] data);

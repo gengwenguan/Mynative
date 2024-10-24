@@ -14,19 +14,17 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 /**
- * @author zhangqingfa
- * @createDate 2020/12/10 11:39
+ * @author gengwenguan
+ * @createDate 2024/10/25
  * @description 解码H264播放
  */
 public class H264DeCodePlay {
 
     private static final String TAG = "zqf-dev";
-    //视频路径
-    private String videoPath;
+
     //使用android MediaCodec解码
     private MediaCodec mediaCodec;
     private Surface surface;
-    //private InputStream is;
 
     ByteBuffer[] m_inputBuffers;
 
@@ -44,13 +42,6 @@ public class H264DeCodePlay {
         Log.e(TAG, "H264DeCodePlay deInit");
     }
 
-//    @Override
-//    protected void finalize() {
-//        mediaCodec.stop();
-//        // 清理资源的逻辑，如关闭文件、断开网络连接等
-//        mediaCodec.release();
-//        Log.e(TAG, "H264DeCodePlay 析构");
-//    }
 
     private void initMediaCodec() {
         try {
@@ -100,101 +91,5 @@ public class H264DeCodePlay {
         }else{
             Log.e(TAG, "dequeueInputBuffer error!!");
         }
-    }
-
-    /**
-     * 解码播放
-     */
-    void decodePlay(InputStream is) {
-
-        mediaCodec.start();
-        try {
-            //1、IO流方式读取h264文件【太大的视频分批加载】
-            byte[] bytes = null;
-
-            bytes = getBytes(is);
-            Log.e(TAG, "bytes size " + bytes.length);
-            //2、拿到 mediaCodec 所有队列buffer[]
-            ByteBuffer[] inputBuffers = mediaCodec.getInputBuffers();
-            //开始位置
-            int startIndex = 0;
-            //h264总字节数
-            int totalSize = bytes.length;
-            //3、解析
-            while (true) {
-                //判断是否符合
-                if (totalSize == 0 || startIndex >= totalSize) {
-                    break;
-                }
-                //寻找索引
-                int nextFrameStart = findByFrame(bytes, startIndex + 1, totalSize);
-                if (nextFrameStart == -1) break;
-                MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
-                // 查询10000毫秒后，如果dSP芯片的buffer全部被占用，返回-1；存在则大于0
-                int inIndex = mediaCodec.dequeueInputBuffer(10000);
-                if (inIndex >= 0) {
-                    //根据返回的index拿到可以用的buffer
-                    ByteBuffer byteBuffer = inputBuffers[inIndex];
-                    //清空缓存
-                    byteBuffer.clear();
-                    //开始为buffer填充数据
-                    byteBuffer.put(bytes, startIndex, nextFrameStart - startIndex);
-                    //填充数据后通知mediacodec查询inIndex索引的这个buffer,
-                    mediaCodec.queueInputBuffer(inIndex, 0, nextFrameStart - startIndex, 0, 0);
-                    //为下一帧做准备，下一帧首就是前一帧的尾。
-                    startIndex = nextFrameStart;
-                } else {
-                    //等待查询空的buffer
-                    continue;
-                }
-                //mediaCodec 查询 "mediaCodec的输出方队列"得到索引
-                int outIndex = mediaCodec.dequeueOutputBuffer(info, 10000);
-                Log.e(TAG, "outIndex " + outIndex);
-                if (outIndex >= 0) {
-                    try {
-                        //暂时以休眠线程方式放慢播放速度
-                        Thread.sleep(33);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    //如果surface绑定了，则直接输入到surface渲染并释放
-                    mediaCodec.releaseOutputBuffer(outIndex, true);
-                } else {
-                    Log.e(TAG, "没有解码成功");
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        mediaCodec.stop();
-        mediaCodec.release();
-//        new MyRun().run();
-//        Thread thread = new Thread(new MyRun());
-//        thread.start();
-//        thread.join();
-    }
-
-    //读取一帧数据
-    private int findByFrame(byte[] bytes, int start, int totalSize) {
-        for (int i = start; i < totalSize - 4; i++) {
-            //对output.h264文件分析 可通过分隔符 0x00000001 读取真正的数据
-            if (bytes[i] == 0x00 && bytes[i + 1] == 0x00 && bytes[i + 2] == 0x00 && bytes[i + 3] == 0x01) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private byte[] getBytes(InputStream is) throws IOException {
-        //InputStream is = new DataInputStream(new FileInputStream(new File(videoPath)));
-        int len;
-        int size = 1024;
-        byte[] buf;
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        buf = new byte[size];
-        while ((len = is.read(buf, 0, size)) != -1)
-            bos.write(buf, 0, len);
-        buf = bos.toByteArray();
-        return buf;
     }
 }

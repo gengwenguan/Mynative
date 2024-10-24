@@ -17,9 +17,6 @@ import android.widget.Toast;
 
 import com.example.mynative.databinding.ActivityMainBinding;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 public class MainActivity extends AppCompatActivity {
 
     // Used to load the 'mynative' library on application startup.
@@ -46,10 +43,7 @@ public class MainActivity extends AppCompatActivity {
         holder.addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
-                //InputStream is = getResources().getAssets().open("test.txt");
 
-//                h265DeCodePlay = new H265DeCodePlay(videoPath, holder.getSurface());
-//                h265DeCodePlay.decodePlay();
             }
 
             @Override
@@ -74,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
         bt2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //v.setVisibility(View.INVISIBLE);
                 // 保存 EditText 的内容
                 String inputText = edittext.getText().toString();
                 SharedPreferences.Editor editor = sharedPreferences.edit();
