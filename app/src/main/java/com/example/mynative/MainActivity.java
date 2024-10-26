@@ -68,15 +68,16 @@ public class MainActivity extends AppCompatActivity {
         bt2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // 保存 EditText 的内容
+                // 保存最后一次EditText 的内容，下次进入程序中可以直接加载
                 String inputText = edittext.getText().toString();
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString(KEY_EDIT_TEXT, inputText);
                 editor.apply(); // 提交变更
+
                 if(bt2.getText().toString() == "stop") {
                     Log.e("MAIN", "onClick stop");
-                    bt2.setText("connect");
-                    terminal.stop();
+                    bt2.setText("connect"); //变更按钮内容
+                    terminal.stop();        //停止取流
                 }else{
                     Log.e("MAIN", "onClick connect");
                     bt2.setText("stop");
@@ -85,7 +86,8 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void run() {
 
-                            terminal.run(ipAddr, holder.getSurface());
+                            terminal.run(ipAddr, holder.getSurface());  //在新的线程中获取网络h264数据并解码显示
+
                             v.post(new Runnable() {
                                 @Override
                                 public void run() {

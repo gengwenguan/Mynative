@@ -10,6 +10,7 @@ import java.net.Socket;
  * @description TCP客户端连接要服务器接收服务器下发的h264数据
  */
 public class TcpClient {
+    //向上回调接收到的h264数据
     public interface Listener{
         void OnRecvH264FromServer(byte[] data);
     }
@@ -26,6 +27,8 @@ public class TcpClient {
     public void stop(){
         m_brun = false;
     }
+
+    //循环运行直到上层主动调用stop()接口，该接口返回
     public void run()
     {
         Socket socket = null;

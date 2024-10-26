@@ -5,12 +5,7 @@ import android.media.MediaFormat;
 import android.util.Log;
 import android.view.Surface;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 /**
@@ -48,7 +43,7 @@ public class H264DeCodePlay {
             //Log.e(TAG, "videoPath " + videoPath);
             //创建解码器 H264的Type为  AAC
             mediaCodec = MediaCodec.createDecoderByType("video/avc");
-            //创建配置
+            //创建配置这样配置可以解码540P及以下的分辨率，调整该参数可以解码更高分辨率的视频
             MediaFormat mediaFormat = MediaFormat.createVideoFormat("video/avc", 540, 960);
             //设置解码预期的帧速率【以帧/秒为单位的视频格式的帧速率的键】
             mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 15);
@@ -64,6 +59,7 @@ public class H264DeCodePlay {
         }
     }
 
+    //解码一帧H264数据
     void decodePlayOneFrame(byte[] data){
         // 查询10000毫秒后，如果dSP芯片的buffer全部被占用，返回-1；存在则大于0
         int inIndex = mediaCodec.dequeueInputBuffer(10000);

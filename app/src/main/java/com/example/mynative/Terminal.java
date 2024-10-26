@@ -13,12 +13,13 @@ public class Terminal implements TcpClient.Listener {
 
     //运行终端
     public void run(String serverAddress, Surface surface){
-        m_DecodePlay = new H264DeCodePlay(surface);
+        m_DecodePlay = new H264DeCodePlay(surface);  //运行时创建解码器
         m_TcpClient = new TcpClient(this, serverAddress);
 
         //调用客户端阻塞运行从网络接收数据直到连接断开
         m_TcpClient.run();
-        m_DecodePlay.deInit();
+
+        m_DecodePlay.deInit();  //运行结束销毁编码器
     }
 
     //停止运行run接口返回
