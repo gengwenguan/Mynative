@@ -196,14 +196,13 @@ public class MainActivity extends AppCompatActivity {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 // 当进度变化时调用
                 //Toast.makeText(MainActivity.this, "Progress: " + progress, Toast.LENGTH_SHORT).show();
-                m_progressBarHold = true;
                 m_progress = progress;
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
                 // 当用户开始拖动进度条时调用
-                //Toast.makeText(MainActivity.this, "Start Tracking", Toast.LENGTH_SHORT).show();
+                m_progressBarHold = true;
             }
 
             @Override
