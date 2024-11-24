@@ -77,7 +77,7 @@ public class H264DeCodePlay {
             MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
             //mediaCodec 查询 "mediaCodec的输出方队列"得到索引
             int outIndex = mediaCodec.dequeueOutputBuffer(info, 10000);
-            Log.e(TAG, "outIndex " + outIndex);
+            //Log.e(TAG, "outIndex " + outIndex);
             if (outIndex >= 0) {
                 //如果surface绑定了，则直接输入到surface渲染并释放
                 mediaCodec.releaseOutputBuffer(outIndex, true);

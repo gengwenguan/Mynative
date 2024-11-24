@@ -17,13 +17,32 @@ public class TcpClient {
 
     public  Listener m_Listener;
     private String m_serverAddress;
-    private int m_port = 56050;
+    private int m_port;
     private boolean m_brun = true;
-    TcpClient(Listener listener,String serverAddress) {
+    private Socket socket = null;
+    TcpClient(Listener listener,String serverAddress, int port) {
         m_serverAddress = serverAddress;
+        m_port = port;
         m_Listener = listener;
     }
 
+    //
+    public void SendData(byte[] dataToSend){
+        try {
+            if(socket != null && !socket.isClosed()){
+                socket.getOutputStream().write(dataToSend); // 发送 byte[] 数据
+                socket.getOutputStream().flush(); // 确保数据被发送
+            }else{
+                System.err.println("socket.isClosed()");
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error occurred: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    //停止tcp客户端数据接收
     public void stop(){
         m_brun = false;
     }
@@ -31,7 +50,7 @@ public class TcpClient {
     //循环运行直到上层主动调用stop()接口，该接口返回
     public void run()
     {
-        Socket socket = null;
+
         try{
             System.out.println("m_serverAddress: " + m_serverAddress);
             socket = new Socket(m_serverAddress, m_port);
@@ -41,7 +60,7 @@ public class TcpClient {
             while (m_brun) {
                 // 读取前四个字节，获取数据长度
                 int dataLength = dataInputStream.readInt();
-                System.out.println("Expected data length: " + dataLength);
+                //System.out.println("Expected data length: " + dataLength);
 
                 // 读取实际数据
                 byte[] data = new byte[dataLength];
@@ -55,9 +74,7 @@ public class TcpClient {
                 }
 
                 m_Listener.OnRecvH264FromServer(data); //回调接收的H264数据
-                // 将字节数组转换为字符串（假设数据是字符串）
-                //String receivedData = new String(data, "UTF-8");
-                //System.out.println("Received data: " + receivedData);
+
             }
             socket.close();
         } catch (IOException e) {

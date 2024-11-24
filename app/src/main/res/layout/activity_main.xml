@@ -7,58 +7,141 @@
     tools:context=".MainActivity">
 
     <SurfaceView
-        android:id="@+id/surfaceView"
-        android:layout_width="match_parent"
+        android:id="@+id/surfacePreview"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintDimensionRatio="h,4:3"
-        tools:layout_editor_absoluteX="16dp"
-        tools:layout_editor_absoluteY="16dp" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.7" />
 
     <EditText
         android:id="@+id/editTextText"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:layout_marginLeft="30dp"
+        android:layout_marginTop="16dp"
         android:ems="10"
         android:hint="ip address"
         android:inputType="text"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/surfaceView" />
+        app:layout_constraintEnd_toStartOf="@id/guideline"
+        app:layout_constraintTop_toBottomOf="@+id/surfacePreview" />
+
+    <Button
+        android:id="@+id/buttonPreview"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="预览"
+        app:layout_constraintStart_toEndOf="@id/guideline"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/surfacePreview" />
+
+    <SurfaceView
+        android:id="@+id/surfacePlayback"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="h,4:3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextText"
+        app:layout_constraintVertical_bias="0.1" />
+
+    <SeekBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0dp"
+        android:max="100"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/surfacePlayback" />
+
+    <!-- 引导线，用于分隔五个按钮 -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.2" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.4" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.6" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.8" />
+
+    <!-- 五个按钮 -->
+    <Button
+        android:id="@+id/button1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="上个文件"
+        android:textSize="8sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/guideline1"
+        app:layout_constraintTop_toBottomOf="@+id/progressBar" />
 
     <Button
         android:id="@+id/button2"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="30dp"
-        android:layout_marginTop="30dp"
-        android:text="connect"
-        app:layout_constraintStart_toEndOf="@+id/editTextText"
-        app:layout_constraintTop_toBottomOf="@+id/surfaceView" />
-
-    <TextView
-        android:id="@+id/sample_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.72" />
+        android:text="快退"
+        app:layout_constraintStart_toEndOf="@id/guideline1"
+        app:layout_constraintEnd_toStartOf="@id/guideline2"
+        app:layout_constraintTop_toBottomOf="@+id/progressBar" />
 
     <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
+        android:id="@+id/button3"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="gotoNewPage"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:text="快进"
+        app:layout_constraintStart_toEndOf="@id/guideline2"
+        app:layout_constraintEnd_toStartOf="@id/guideline3"
+        app:layout_constraintTop_toBottomOf="@+id/progressBar" />
+
+    <Button
+        android:id="@+id/button4"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="下个文件"
+        android:textSize="8sp"
+        app:layout_constraintStart_toEndOf="@id/guideline3"
+        app:layout_constraintEnd_toStartOf="@id/guideline4"
+        app:layout_constraintTop_toBottomOf="@+id/progressBar" />
+
+    <Button
+        android:id="@+id/button5"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="回放"
+        app:layout_constraintStart_toEndOf="@id/guideline4"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.84000003" />
-
-
-
+        app:layout_constraintTop_toBottomOf="@+id/progressBar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
