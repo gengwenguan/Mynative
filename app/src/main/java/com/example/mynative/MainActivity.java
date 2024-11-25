@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -47,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
+        //保持屏幕常亮
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(binding.getRoot());
         holderPreview = binding.surfacePreview.getHolder();
         holderPreview.addCallback(new SurfaceHolder.Callback() {
@@ -224,7 +227,25 @@ public class MainActivity extends AppCompatActivity {
                 SendCtrlMessage(102);
             }
         });
-
+        //加速按钮按下加速，松开停止加速
+        binding.button23.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        // 按钮按下时改变背景颜色
+                        binding.button23.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.purple_500));
+                        SendCtrlMessage(107);
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        // 按钮松开时恢复背景颜色
+                        SendCtrlMessage(108);
+                        binding.button23.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.default_button));
+                        break;
+                }
+                return true; // 返回 true 表示事件已经处理
+            }
+        });
         binding.button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v)  {
@@ -254,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
 //              });
 
     }
-    //向服务器发送的控制消息：0~100进度条拖动、101快退, 102快进、104上一个文件、105下一个文件
+    //向服务器发送的控制消息：0~100进度条拖动、101快退、102快进、104上一个文件、105下一个文件、107加速、108停止加速
     private void SendCtrlMessage(int message){
         Thread thread = new Thread(new Runnable() {
             @Override
