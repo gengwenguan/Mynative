@@ -12,7 +12,7 @@ import java.net.Socket;
 public class TcpClient {
     //向上回调接收到的h264数据
     public interface Listener{
-        void OnRecvH264FromServer(byte[] data);
+        void OnRecvMediaDataFromServer(byte[] data);
     }
 
     public  Listener m_Listener;
@@ -73,7 +73,7 @@ public class TcpClient {
                     totalRead += bytesRead;
                 }
 
-                m_Listener.OnRecvH264FromServer(data); //回调接收的H264数据
+                m_Listener.OnRecvMediaDataFromServer(data); //回调接收的H264数据
 
             }
             socket.close();

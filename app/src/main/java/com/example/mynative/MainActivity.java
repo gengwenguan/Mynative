@@ -3,6 +3,7 @@ package com.example.mynative;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import com.example.mynative.R;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -10,6 +11,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -84,7 +86,9 @@ public class MainActivity extends AppCompatActivity {
                 String inputText = binding.editTextText.getText().toString();
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString(KEY_EDIT_TEXT, inputText);
-                editor.apply(); // 提交变更
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+                    editor.apply(); // 提交变更
+                }
 
                 if(btPreview.getText().toString() == "停止") {
                     Log.e("MAIN", "onClick stop");
@@ -160,7 +164,9 @@ public class MainActivity extends AppCompatActivity {
                 String inputText = binding.editTextText.getText().toString();
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString(KEY_EDIT_TEXT, inputText);
-                editor.apply(); // 提交变更
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+                    editor.apply(); // 提交变更
+                }
 
                 if(btPlayback.getText().toString() == "停止") {
                     Log.e("MAIN", "onClick stop");

@@ -49,7 +49,7 @@ public class TerminalPlayback implements TcpClient.Listener {
 
     //网络收到一帧数据进行解码渲染
     @Override
-    public void OnRecvH264FromServer(byte[] data){
+    public void OnRecvMediaDataFromServer(byte[] data){
         if(m_DecodePlay == null){
             return;
         }
