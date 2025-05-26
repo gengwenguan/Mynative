@@ -1,5 +1,5 @@
 package com.example.mynative;
-import com.example.mynative.R;
+
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;

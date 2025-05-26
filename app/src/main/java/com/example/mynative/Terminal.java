@@ -5,8 +5,8 @@ import android.view.Surface;
 
 /**
  * @author gengwenguan
- * @createDate 2024/10/25
- * @description 网络接收数据解码渲染客户端，从网络接收数据，进行解码渲染显示
+ * createDate 2024/10/25
+ * description 网络接收数据解码渲染客户端，从网络接收数据，进行解码渲染显示
  */
 public class Terminal implements TcpClient.Listener {
     private TcpClient m_TcpClient;

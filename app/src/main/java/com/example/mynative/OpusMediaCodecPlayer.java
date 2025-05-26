@@ -8,6 +8,10 @@ import android.media.MediaFormat;
 import android.util.Log;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayDeque;
+import java.util.Objects;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class OpusMediaCodecPlayer {
     private static final String TAG = "OpusDecoder";
@@ -16,12 +20,15 @@ public class OpusMediaCodecPlayer {
     //private static final String MIME_TYPE = "audio/opus";
     private static final int SAMPLE_RATE = 48000;
     private static final int CHANNEL_COUNT = 1; // 单声道
-    private static final int FRAME_SIZE = 960; // 20ms帧大小 (48000 * 0.02 = 960)
+    private static final int FIXED_PACKET_SIZE = 1920; // 固定20ms数据量(48000*0.02*2)
+    private static final int BYTES_PER_SAMPLE = 2;     // 16-bit PCM
+    //private static final int FRAME_SIZE = 960; // 20ms帧大小 (48000 * 0.02 = 960)
 
     private MediaCodec decoder;
     private AudioTrack audioTrack;
     private boolean isRunning = false;
-
+    private final LinkedBlockingQueue<byte[]> pcmQueue = new LinkedBlockingQueue<>();
+    private Thread playbackThread;
     public void initialize() throws Exception {
         // 创建MediaCodec解码器
         decoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_AUDIO_OPUS);
@@ -70,6 +77,7 @@ public class OpusMediaCodecPlayer {
                 AudioFormat.CHANNEL_OUT_MONO,
                 AudioFormat.ENCODING_PCM_16BIT);
 
+
         audioTrack = new AudioTrack(
                 AudioManager.STREAM_MUSIC,
                 SAMPLE_RATE,
@@ -77,6 +85,10 @@ public class OpusMediaCodecPlayer {
                 AudioFormat.ENCODING_PCM_16BIT,
                 bufferSize,
                 AudioTrack.MODE_STREAM);
+
+        // 启动播放线程
+        playbackThread = new Thread(this::fixedUniformCompressionPlayback);
+
 
         Log.d(TAG, "Opus decoder initialized");
     }
@@ -88,6 +100,7 @@ public class OpusMediaCodecPlayer {
 
         decoder.start();
         audioTrack.play();
+        playbackThread.start();
         isRunning = true;
 
         Log.d(TAG, "Opus decoder started");
@@ -97,8 +110,13 @@ public class OpusMediaCodecPlayer {
         if (!isRunning) {
             return;
         }
+        isRunning = false;
 
         try {
+            if (playbackThread != null) {
+                playbackThread.interrupt();
+                playbackThread.join(1000);
+            }
             decoder.stop();
             decoder.release();
             audioTrack.stop();
@@ -106,7 +124,7 @@ public class OpusMediaCodecPlayer {
         } catch (Exception e) {
             Log.e(TAG, "Error stopping decoder", e);
         } finally {
-            isRunning = false;
+
             decoder = null;
             audioTrack = null;
         }
@@ -124,6 +142,7 @@ public class OpusMediaCodecPlayer {
             int inputBufferId = decoder.dequeueInputBuffer(10000);
             if (inputBufferId >= 0) {
                 ByteBuffer inputBuffer = decoder.getInputBuffer(inputBufferId);
+                assert inputBuffer != null;
                 inputBuffer.clear();
                 inputBuffer.put(opusData);
                 decoder.queueInputBuffer(
@@ -143,8 +162,12 @@ public class OpusMediaCodecPlayer {
 
                 // 将解码后的PCM数据写入AudioTrack播放
                 byte[] pcmData = new byte[bufferInfo.size];
+                assert outputBuffer != null;
                 outputBuffer.get(pcmData);
-                audioTrack.write(pcmData, 0, pcmData.length);
+
+                pcmQueue.put(pcmData);
+
+                //audioTrack.write(pcmData, 0, pcmData.length);
 
                 decoder.releaseOutputBuffer(outputBufferId, false);
                 outputBufferId = decoder.dequeueOutputBuffer(bufferInfo, 0);
@@ -153,6 +176,69 @@ public class OpusMediaCodecPlayer {
             Log.e(TAG, "Decoding error", e);
         }
     }
+
+    //高级统一压缩播放
+    private void fixedUniformCompressionPlayback() {
+        final int TOTAL_SAMPLES = FIXED_PACKET_SIZE / BYTES_PER_SAMPLE; // 960
+        Queue<byte[]> packetBuffer = new ArrayDeque<>();
+
+        while (isRunning || !pcmQueue.isEmpty()) {
+            try {
+                // 1. 获取待处理包
+                pcmQueue.drainTo(packetBuffer);
+                if (packetBuffer.isEmpty()) {
+                    Thread.yield();
+                    continue;
+                }
+
+                // 2. 单个包直接播放
+                if (packetBuffer.size() == 1) {
+                    audioTrack.write(packetBuffer.poll(), 0, FIXED_PACKET_SIZE);
+                    continue;
+                }
+
+                // 3. 多包合并
+                int packetCount = packetBuffer.size();
+                byte[] mergedPcm = new byte[FIXED_PACKET_SIZE];
+                int destPos = 0;
+
+                // 计算每个包需要贡献的采样点数
+                int baseSamples = TOTAL_SAMPLES / packetCount;
+                int remainder = TOTAL_SAMPLES % packetCount;
+
+                // 遍历每个包
+                int packetIdx = 0;
+                for (byte[] packet : packetBuffer) {
+                    int samplesToTake = baseSamples + (packetIdx < remainder ? 1 : 0);
+                    float step = (TOTAL_SAMPLES - 1) / (float) (samplesToTake - 1); // 关键修正点
+
+                    // 均匀抽取采样点
+                    for (int i = 0; i < samplesToTake; i++) {
+                        int srcSamplePos = Math.round(i * step);
+                        srcSamplePos = Math.min(srcSamplePos, TOTAL_SAMPLES - 1);
+
+                        // 计算字节位置并拷贝
+                        int srcBytePos = srcSamplePos * BYTES_PER_SAMPLE;
+                        System.arraycopy(
+                                packet, srcBytePos,
+                                mergedPcm, destPos,
+                                BYTES_PER_SAMPLE
+                        );
+                        destPos += BYTES_PER_SAMPLE;
+                    }
+                    packetIdx++;
+                }
+
+                // 4. 播放合并后的数据
+                audioTrack.write(mergedPcm, 0, mergedPcm.length);
+                packetBuffer.clear();
+
+            } catch (Exception e) {
+                Log.e(TAG, "Playback error", e);
+            }
+        }
+    }
+
 }
 
 //package com.example.mynative;

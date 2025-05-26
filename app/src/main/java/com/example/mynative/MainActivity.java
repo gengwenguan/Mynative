@@ -3,29 +3,25 @@ package com.example.mynative;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-import com.example.mynative.R;
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
+
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.WindowManager;
-import android.widget.EditText;
 import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Button;
 import android.view.View;
 import android.widget.Toast;
 
 import com.example.mynative.databinding.ActivityMainBinding;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,12 +32,13 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private SurfaceHolder holderPreview;
-    private SurfaceHolder holderPlayback;
     private Terminal terminal;
     private TerminalPlayback terminalPlayback;
     private SharedPreferences sharedPreferences;
     private int m_progress;
     private boolean m_progressBarHold = false; //进度条是否按下
+    private boolean m_bPreview = false;  //是否正在预览
+    private boolean m_bPlayback = false; //是否正在回放
     private static final String PREFS_NAME = "MyPrefs";
     private static final String KEY_EDIT_TEXT = "last_input";
     @SuppressLint("ClickableViewAccessibility")
@@ -82,77 +79,55 @@ public class MainActivity extends AppCompatActivity {
         btPreview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(m_bPlayback) return;  //正在回放的时候不处理预览按钮
                 // 保存最后一次EditText 的内容，下次进入程序中可以直接加载
                 String inputText = binding.editTextText.getText().toString();
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString(KEY_EDIT_TEXT, inputText);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-                    editor.apply(); // 提交变更
-                }
+                editor.apply(); // 提交变更
 
-                if(btPreview.getText().toString() == "停止") {
+                if(btPreview.getText().toString().equals("停止")) {
                     Log.e("MAIN", "onClick stop");
                     btPreview.setText("预览"); //变更按钮内容
                     terminal.stop();        //停止取流
+                    m_bPreview = false;
                 }else{
+                    m_bPreview = true;
                     Log.e("MAIN", "onClick Preview");
                     btPreview.setText("停止");
                     String ipAddr = binding.editTextText.getText().toString();
-                    Thread thread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
+                    Thread thread = new Thread(() -> {
 
-                            terminal.run(ipAddr, holderPreview.getSurface());  //在新的线程中获取网络h264数据并解码显示
+                        terminal.run(ipAddr, holderPreview.getSurface());  //在新的线程中获取网络h264数据并解码显示
 
-                            v.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    btPreview.setText("预览");
-                                    Toast.makeText(MainActivity.this,"预览结束",Toast.LENGTH_LONG).show();
-                                    //v.setVisibility(View.VISIBLE);
-                                }
-                            });
-                        }
+                        v.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                btPreview.setText("预览");
+                                m_bPreview = false;
+                                Toast.makeText(MainActivity.this,"预览结束",Toast.LENGTH_LONG).show();
+                                //v.setVisibility(View.VISIBLE);
+                            }
+                        });
                     });
                     thread.start();
                 }
             }
         });
 
-        holderPlayback = binding.surfacePlayback.getHolder();
-        holderPlayback.addCallback(new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
-
-            }
-
-            @Override
-            public void surfaceChanged(@NonNull SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void surfaceDestroyed(@NonNull SurfaceHolder surfaceHolder) {
-
-            }
-        });
         //创建回放查看终端
-        terminalPlayback = new TerminalPlayback(new TerminalPlayback.Listener(){
-            @Override
-            public void OnProgress(int data)
-            {
-                //进度条没有被按下且进度发生变化时才操作ui线程更新进度条进度
-                if(!m_progressBarHold && m_progress != data){
-                    //在UI线程对控件进行操作
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            // 在这里更新UI控件
-                            m_progress = data;
-                            binding.progressBar.setProgress(data);
-                        }
-                    });
-                }
+        terminalPlayback = new TerminalPlayback(data -> {
+            //进度条没有被按下且进度发生变化时才操作ui线程更新进度条进度
+            if(!m_progressBarHold && m_progress != data){
+                //在UI线程对控件进行操作
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // 在这里更新UI控件
+                        m_progress = data;
+                        binding.progressBar.setProgress(data);
+                    }
+                });
             }
         });
 
@@ -160,37 +135,39 @@ public class MainActivity extends AppCompatActivity {
         btPlayback.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(m_bPreview) return;  //正在预览的时候不处理回放按钮
                 // 保存最后一次EditText 的内容，下次进入程序中可以直接加载
                 String inputText = binding.editTextText.getText().toString();
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString(KEY_EDIT_TEXT, inputText);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-                    editor.apply(); // 提交变更
-                }
+                editor.apply(); // 提交变更
 
-                if(btPlayback.getText().toString() == "停止") {
+                if(btPlayback.getText().toString().equals("停止")) {
                     Log.e("MAIN", "onClick stop");
                     btPlayback.setText("回放"); //变更按钮内容
                     terminalPlayback.stop();        //停止取流
+                    m_bPlayback = false;
+                    setControlsVisibility(false);
                 }else{
+                    m_bPlayback = true;
+                    setControlsVisibility(true);
                     Log.e("MAIN", "onClick Preview");
                     btPlayback.setText("停止");
                     String ipAddr = binding.editTextText.getText().toString();
-                    Thread thread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
+                    Thread thread = new Thread(() -> {
 
-                            terminalPlayback.run(ipAddr, holderPlayback.getSurface());  //在新的线程中获取网络h264数据并解码显示
+                        terminalPlayback.run(ipAddr, holderPreview.getSurface());  //在新的线程中获取网络h264数据并解码显示
 
-                            v.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    btPlayback.setText("回放");
-                                    Toast.makeText(MainActivity.this,"回放结束",Toast.LENGTH_LONG).show();
-                                    //v.setVisibility(View.VISIBLE);
-                                }
-                            });
-                        }
+                        v.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                btPlayback.setText("回放");
+                                m_bPlayback = false;
+                                setControlsVisibility(false);
+                                Toast.makeText(MainActivity.this,"回放结束",Toast.LENGTH_LONG).show();
+                                //v.setVisibility(View.VISIBLE);
+                            }
+                        });
                     });
                     thread.start();
                 }
@@ -221,12 +198,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        binding.button2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v)  {
-                SendCtrlMessage(101);
-            }
-        });
+        binding.button2.setOnClickListener(v -> SendCtrlMessage(101));
         binding.button3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v)  {
@@ -234,36 +206,25 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         //加速按钮按下加速，松开停止加速
-        binding.button23.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        // 按钮按下时改变背景颜色
-                        binding.button23.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.purple_500));
-                        SendCtrlMessage(107);
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        // 按钮松开时恢复背景颜色
-                        SendCtrlMessage(108);
-                        binding.button23.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.default_button));
-                        break;
-                }
-                return true; // 返回 true 表示事件已经处理
+        binding.button23.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    // 按钮按下时改变背景颜色
+                    //binding.button23.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.purple_500));
+                    SendCtrlMessage(107);
+                    break;
+                case MotionEvent.ACTION_UP:
+                    // 按钮松开时恢复背景颜色
+                    SendCtrlMessage(108);
+                    //binding.button23.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.default_button));
+                    break;
             }
+            return false; // 让事件继续传递
         });
-        binding.button1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v)  {
-                SendCtrlMessage(104);
-            }
-        });
-        binding.button4.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v)  {
-                SendCtrlMessage(105);
-            }
-        });
+        binding.button1.setOnClickListener(v -> SendCtrlMessage(104));
+        binding.button4.setOnClickListener(v -> SendCtrlMessage(105));
+
+        setControlsVisibility(false);
 
 // Example of a call to a native method
 //        TextView tv = binding.sampleText;
@@ -292,6 +253,33 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         thread.start();
+    }
+
+    /**
+     * 控制播放控制栏（进度条 + 按钮组）的可见性和可点击状态
+     * @param isVisible true=显示并启用, false=隐藏并禁用
+     */
+    public void setControlsVisibility(boolean isVisible) {
+        // 进度条控制
+        binding.progressBar.setVisibility(isVisible ? View.VISIBLE : View.INVISIBLE);
+        binding.progressBar.setEnabled(isVisible);
+
+        // 按钮容器控制（可选：如果需要对容器本身操作）
+        binding.controlButtonsContainer.setVisibility(isVisible ? View.VISIBLE : View.INVISIBLE);
+        binding.controlButtonsContainer.setEnabled(isVisible);
+
+        // 批量控制所有按钮（button1, button2, button23, button3, button4）
+        List<Button> buttons = Arrays.asList(
+                binding.button1,
+                binding.button2,
+                binding.button23,
+                binding.button3,
+                binding.button4
+        );
+        for (Button button : buttons) {
+            button.setVisibility(isVisible ? View.VISIBLE : View.INVISIBLE);
+            button.setEnabled(isVisible);
+        }
     }
     /**
      * A native method that is implemented by the 'mynative' native library,
