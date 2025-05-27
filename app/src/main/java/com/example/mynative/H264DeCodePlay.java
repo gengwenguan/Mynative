@@ -82,7 +82,7 @@ public class H264DeCodePlay {
                 //如果surface绑定了，则直接输入到surface渲染并释放
                 mediaCodec.releaseOutputBuffer(outIndex, true);
             } else {
-                Log.e(TAG, "没有解码成功");
+                Log.e(TAG, "没有解码成功111");
             }
         }else{
             Log.e(TAG, "dequeueInputBuffer error!!");

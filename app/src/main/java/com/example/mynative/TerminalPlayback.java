@@ -68,7 +68,7 @@ public class TerminalPlayback implements TcpClient.Listener {
         }
         // 提取进度数据
         int writeFlag = data[0];
-        int flag = writeFlag & 0x8f;     //提取是音频还是视频
+        int flag = writeFlag & 0x80;     //提取是音频还是视频
         int progress = writeFlag & 0x7f; //提取播放进度
         // 视频数据时回调进度数据
         if (m_Listener != null && flag != 0) {

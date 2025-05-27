@@ -88,9 +88,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if(btPreview.getText().toString().equals("停止")) {
                     Log.e("MAIN", "onClick stop");
-                    btPreview.setText("预览"); //变更按钮内容
                     terminal.stop();        //停止取流
-                    m_bPreview = false;
                 }else{
                     m_bPreview = true;
                     Log.e("MAIN", "onClick Preview");
@@ -144,9 +142,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if(btPlayback.getText().toString().equals("停止")) {
                     Log.e("MAIN", "onClick stop");
-                    btPlayback.setText("回放"); //变更按钮内容
                     terminalPlayback.stop();        //停止取流
-                    m_bPlayback = false;
                     setControlsVisibility(false);
                 }else{
                     m_bPlayback = true;
