@@ -50,10 +50,10 @@
         android:textAllCaps="false"
         android:textColor="#FFFFFF"
         app:layout_constraintTop_toTopOf="@id/editTextText"
-        app:layout_constraintEnd_toStartOf="@+id/button5" />
+        app:layout_constraintEnd_toStartOf="@+id/buttonPlayback" />
 
     <Button
-        android:id="@+id/button5"
+        android:id="@+id/buttonPlayback"
         style="@style/Widget.AppCompat.Button.Colored"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
@@ -140,7 +140,7 @@
             android:id="@+id/button23"
             android:layout_width="0dp"
             android:layout_height="68dp"
-            android:text="加速"
+            android:text="x3"
             android:textSize="9sp"
             android:background="@drawable/ripple_button_background"
             app:layout_constraintStart_toEndOf="@+id/button2"

@@ -60,6 +60,13 @@ public class TerminalPlayback implements TcpClient.Listener {
         }
     }
 
+    //设置播放速度
+    public void SetSpeed(int sp){
+        if(m_DecodePlay != null){
+            m_DecodePlay.SetSpeed(sp);
+        }
+    }
+
     //网络收到一帧数据进行解码渲染
     @Override
     public void OnRecvMediaDataFromServer(byte[] data){

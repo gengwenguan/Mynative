@@ -37,8 +37,6 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private int m_progress;
     private boolean m_progressBarHold = false; //进度条是否按下
-    private boolean m_bPreview = false;  //是否正在预览
-    private boolean m_bPlayback = false; //是否正在回放
     private static final String PREFS_NAME = "MyPrefs";
     private static final String KEY_EDIT_TEXT = "last_input";
     @SuppressLint("ClickableViewAccessibility")
@@ -53,19 +51,11 @@ public class MainActivity extends AppCompatActivity {
         holderPreview = binding.surfacePreview.getHolder();
         holderPreview.addCallback(new SurfaceHolder.Callback() {
             @Override
-            public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
-
-            }
-
+            public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {}
             @Override
-            public void surfaceChanged(@NonNull SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-
-            }
-
+            public void surfaceChanged(@NonNull SurfaceHolder surfaceHolder, int i, int i1, int i2) {}
             @Override
-            public void surfaceDestroyed(@NonNull SurfaceHolder surfaceHolder) {
-
-            }
+            public void surfaceDestroyed(@NonNull SurfaceHolder surfaceHolder) {}
         });
 
         // 加载保存的内容
@@ -79,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
         btPreview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(m_bPlayback) return;  //正在回放的时候不处理预览按钮
                 // 保存最后一次EditText 的内容，下次进入程序中可以直接加载
                 String inputText = binding.editTextText.getText().toString();
                 SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -90,7 +79,8 @@ public class MainActivity extends AppCompatActivity {
                     Log.e("MAIN", "onClick stop");
                     terminal.stop();        //停止取流
                 }else{
-                    m_bPreview = true;
+                    binding.buttonPlayback.setVisibility(View.INVISIBLE);
+                    binding.buttonPlayback.setEnabled(false);
                     Log.e("MAIN", "onClick Preview");
                     btPreview.setText("停止");
                     String ipAddr = binding.editTextText.getText().toString();
@@ -102,8 +92,9 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void run() {
                                 btPreview.setText("预览");
-                                m_bPreview = false;
-                                Toast.makeText(MainActivity.this,"预览结束",Toast.LENGTH_LONG).show();
+                                Toast.makeText(MainActivity.this,"预览结束",Toast.LENGTH_SHORT).show();
+                                binding.buttonPlayback.setVisibility(View.VISIBLE);
+                                binding.buttonPlayback.setEnabled(true);
                                 //v.setVisibility(View.VISIBLE);
                             }
                         });
@@ -129,11 +120,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button btPlayback= binding.button5;
+        Button btPlayback= binding.buttonPlayback;
         btPlayback.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(m_bPreview) return;  //正在预览的时候不处理回放按钮
                 // 保存最后一次EditText 的内容，下次进入程序中可以直接加载
                 String inputText = binding.editTextText.getText().toString();
                 SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -145,7 +135,8 @@ public class MainActivity extends AppCompatActivity {
                     terminalPlayback.stop();        //停止取流
                     setControlsVisibility(false);
                 }else{
-                    m_bPlayback = true;
+                    binding.buttonPreview.setVisibility(View.INVISIBLE);
+                    binding.buttonPreview.setEnabled(false);
                     setControlsVisibility(true);
                     Log.e("MAIN", "onClick Preview");
                     btPlayback.setText("停止");
@@ -158,9 +149,10 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void run() {
                                 btPlayback.setText("回放");
-                                m_bPlayback = false;
                                 setControlsVisibility(false);
-                                Toast.makeText(MainActivity.this,"回放结束",Toast.LENGTH_LONG).show();
+                                Toast.makeText(MainActivity.this,"回放结束",Toast.LENGTH_SHORT).show();
+                                binding.buttonPreview.setVisibility(View.VISIBLE);
+                                binding.buttonPreview.setEnabled(true);
                                 //v.setVisibility(View.VISIBLE);
                             }
                         });
@@ -195,27 +187,22 @@ public class MainActivity extends AppCompatActivity {
         });
 
         binding.button2.setOnClickListener(v -> SendCtrlMessage(101));
-        binding.button3.setOnClickListener(new View.OnClickListener() {
+        binding.button3.setOnClickListener(v -> SendCtrlMessage(102));
+        binding.button23.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("SetTextI18n")
             @Override
-            public void onClick(View v)  {
-                SendCtrlMessage(102);
-            }
-        });
-        //加速按钮按下加速，松开停止加速
-        binding.button23.setOnTouchListener((v, event) -> {
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    // 按钮按下时改变背景颜色
-                    //binding.button23.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.purple_500));
+            public void onClick(View v) {
+                if(binding.button23.getText().equals("x3")){
+                    terminalPlayback.SetSpeed(3);
                     SendCtrlMessage(107);
-                    break;
-                case MotionEvent.ACTION_UP:
-                    // 按钮松开时恢复背景颜色
+                    binding.button23.setText("x1");
+                }else{
+                    terminalPlayback.SetSpeed(1);
                     SendCtrlMessage(108);
-                    //binding.button23.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.default_button));
-                    break;
+                    binding.button23.setText("x3");
+                }
+
             }
-            return false; // 让事件继续传递
         });
         binding.button1.setOnClickListener(v -> SendCtrlMessage(104));
         binding.button4.setOnClickListener(v -> SendCtrlMessage(105));

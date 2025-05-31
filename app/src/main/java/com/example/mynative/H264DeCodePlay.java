@@ -21,6 +21,9 @@ public class H264DeCodePlay {
     private MediaCodec mediaCodec;
     private Surface surface;
 
+    private int frameCount = 0; //解码帧计数
+    private int speed = 1;     //视频播放速度
+
     ByteBuffer[] m_inputBuffers;
 
 
@@ -59,6 +62,9 @@ public class H264DeCodePlay {
         }
     }
 
+    void SetSpeed(int sp){
+        speed = sp;
+    }
     //解码一帧H264数据
     void decodePlayOneFrame(byte[] data){
         // 查询10000毫秒后，如果dSP芯片的buffer全部被占用，返回-1；存在则大于0
@@ -80,12 +86,14 @@ public class H264DeCodePlay {
             //Log.e(TAG, "outIndex " + outIndex);
             if (outIndex >= 0) {
                 //如果surface绑定了，则直接输入到surface渲染并释放
-                mediaCodec.releaseOutputBuffer(outIndex, true);
+                frameCount++;
+                boolean render = frameCount%speed == 0;   //根据播放速度决定该帧是否渲染
+                mediaCodec.releaseOutputBuffer(outIndex, render);
             } else {
                 Log.e(TAG, "没有解码成功111");
             }
         }else{
-            Log.e(TAG, "dequeueInputBuffer error!!");
+            Log.e(TAG, "dequeueInputBuffer error!! inIndex:"+inIndex);
         }
     }
 }
